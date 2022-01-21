@@ -1,0 +1,40 @@
+openapi: 3.0.1
+info:
+  title: Json responder
+  description: Send JSON to Compute@Edge, have it parsed and to rust and then converted back to JSON again in response
+  version: 1.0.0
+servers:
+- url: http://localhost:7676
+  description: local fastly server
+paths:
+  /json:
+    post:
+      operationId: postJson
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+
+  /json:
+    put:
+      operationId: putJson
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
