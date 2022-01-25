@@ -28,10 +28,12 @@ fn main(req: Request) -> Result<Response, Error> {
 
             let body = req.into_body_str();
 
+            println!("body of request {} ", body);
+
             // Parse the string of data into serde_json::Value.
             let v: Value = from_str(&body)?;
 
-            println!("json body received {} ", v);
+            println!("translated to json {} ", v);
 
             Ok(Response::new()
                 .with_body_json(&v)?)

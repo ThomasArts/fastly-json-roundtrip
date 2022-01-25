@@ -10,16 +10,27 @@
 
 -compile([export_all, nowarn_export_all]).
 
+
+%% Provide the body as a string and expect a string in response.
 prop_round_trip() ->
     ?FORALL(Json, gen_json(),
-            ?IMPLIES(not (is_float(Json) orelse is_integer(Json)),
             begin
-                Body = encode(Json),
+                Body = jsx:encode(Json),
                 Request = api:request(postJson, #{body => Body}, []),
                 {ok, 200, Headers, RetBody} = api:http_request(Request, [], [], []),
                 ?WHENFAIL(eqc:format("Response: ~p~nBody: ~p~n", [Headers, RetBody]),
                           equals(decode(RetBody), Json))
-            end)).
+            end).
+
+%% Automatic conversion depending on specified content-type
+prop_round_trip_json() ->
+    ?FORALL(Json, gen_json(),
+            begin
+                Request = api:request(putJson, #{body => Json}, []),
+                {ok, Status, Headers, RetBody} = api:http_request(Request, [], [], []),
+                ?WHENFAIL(eqc:format("Response: ~p~nBody: ~p~n", [Headers, RetBody]),
+                          equals(decode(RetBody), Json))
+            end).
 
 
 %% generator and helper functions
@@ -29,7 +40,7 @@ gen_json() ->
          ?SIZED(Size, gen_json(Size, [ iolist_to_binary(Str) || Str <- Words] ++ [<<"Give me a break, please">>]))).
 
 gen_json(0, Strings) ->
-    oneof([int(), %% real(),
+    oneof([int(), real(),
            true, false, null,
            elements(Strings)]);
 gen_json(N, Strings) ->
@@ -45,14 +56,5 @@ gen_json(N, Strings) ->
                             end)
                 ])).
 
-encode(Json) ->
-    if is_integer(Json) -> Json;
-       is_float(Json) -> Json;
-       true -> jsx:encode(Json)
-    end.
-
 decode(String) ->
-    Wrap =
-        iolist_to_binary(["{\"wrap\": ", String, "}"]),
-    #{<<"wrap">> := Body} = jsx:decode(Wrap, [return_maps]),
-    Body.
+    jsx:decode(iolist_to_binary(String), []).

@@ -519,8 +519,7 @@ log(Fmt, Params, Cfg) ->
         F when is_function(F) -> F(Fmt, Params)
     end.
 
-make_body("application/json" ++ _ = CT, Params, _Path)
-    when is_map(Params) ->
+make_body("application/json" ++ _ = CT, Params, _Path) ->
     {CT, jsx:encode(Params)};
 make_body("application/octet-stream" ++ _ = CT, Bin,
           _Path)
